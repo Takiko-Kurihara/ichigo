@@ -699,15 +699,18 @@
                 <form id="myContactForm">
                     <div class="form-row">
                         <label class="form-label">Name</label>
-                        <input type="text" name="名前" class="form-control" placeholder="お名前" required>
+                        <!-- GAS側の設定に合わせて name="name" に変更 -->
+                        <input type="text" name="name" class="form-control" placeholder="お名前" required>
                     </div>
                     <div class="form-row">
                         <label class="form-label">Email</label>
-                        <input type="email" name="Email" class="form-control" placeholder="メールアドレス" required>
+                        <!-- GAS側の設定に合わせて name="email" に変更 -->
+                        <input type="email" name="email" class="form-control" placeholder="メールアドレス" required>
                     </div>
                     <div class="form-row">
                         <label class="form-label">Message</label>
-                        <textarea name="メッセージ" class="form-control" rows="4" placeholder="メッセージ" style="resize: vertical;" required></textarea>
+                        <!-- GAS側の設定に合わせて name="message" に変更 -->
+                        <textarea name="message" class="form-control" rows="4" placeholder="メッセージ" style="resize: vertical;" required></textarea>
                     </div>
                     <button type="submit" class="submit-btn">Send Message</button>
                 </form>
@@ -817,7 +820,6 @@
         contactForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            // Gemによって置換されるGASのURL
             const scriptURL = 'https://script.google.com/macros/s/AKfycbzgjY91Uyax8DDW3KvGncaU4cbt60FM95IQvEz1veWTxogIfG8t8kzY1pxXmRUKV-_9/exec'; 
 
             if(!scriptURL || scriptURL === 'なし' || scriptURL.includes('{{')) {
@@ -826,10 +828,10 @@
                 return;
             }
 
-            // URLが設定されている場合の送信処理
+            // フォームのデータを取得し、JSON形式のオブジェクトに変換
             const formData = new FormData(contactForm);
-            // GASが最も受け取りやすいURLパラメータ形式に変換
-            const data = new URLSearchParams(formData);
+            const data = {};
+            formData.forEach((value, key) => data[key] = value);
 
             const btn = contactForm.querySelector('button');
             const originalText = btn.innerText;
@@ -838,17 +840,21 @@
 
             fetch(scriptURL, {
                 method: 'POST',
-                mode: 'no-cors', // CORSエラー回避
-                body: data
+                mode: 'no-cors', // CORSエラーを回避
+                headers: {
+                    // JSONデータを送るための設定（GASとの連携で重要なポイント）
+                    'Content-Type': 'text/plain', 
+                },
+                body: JSON.stringify(data) // データをJSON形式に変換して送信
             })
             .then(() => {
-                // no-cors通信が完了した時点で成功とみなす
+                // 通信完了として扱う
                 alert('メッセージを送信しました！');
                 contactForm.reset();
             })
             .catch(error => {
                 console.error('Error!', error.message);
-                alert('送信に失敗しました。GASのデプロイ設定をご確認ください。');
+                alert('送信に失敗しました。');
             })
             .finally(() => {
                 btn.innerText = originalText;

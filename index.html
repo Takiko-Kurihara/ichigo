@@ -828,6 +828,8 @@
 
             // URLが設定されている場合の送信処理
             const formData = new FormData(contactForm);
+            // GASが最も受け取りやすいURLパラメータ形式に変換
+            const data = new URLSearchParams(formData);
 
             const btn = contactForm.querySelector('button');
             const originalText = btn.innerText;
@@ -836,16 +838,17 @@
 
             fetch(scriptURL, {
                 method: 'POST',
-                mode: 'no-cors', // CORSエラーを回避するための設定を追加
-                body: formData
+                mode: 'no-cors', // CORSエラー回避
+                body: data
             })
-            .then(response => {
+            .then(() => {
+                // no-cors通信が完了した時点で成功とみなす
                 alert('メッセージを送信しました！');
                 contactForm.reset();
             })
             .catch(error => {
                 console.error('Error!', error.message);
-                alert('送信に失敗しました。');
+                alert('送信に失敗しました。GASのデプロイ設定をご確認ください。');
             })
             .finally(() => {
                 btn.innerText = originalText;
